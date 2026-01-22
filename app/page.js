@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import LoginPage from "./login/page";
+// import WelcomePage from "./welcome/page";
 import WelcomePage from "./welcome/page";
 
 export default function Home() {
@@ -16,6 +17,7 @@ export default function Home() {
     }
     setCheckingAuth(false);
   }, []);
+
 
   const handleLogout = () => {
     localStorage.removeItem("token");
