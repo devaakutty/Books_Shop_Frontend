@@ -18,7 +18,7 @@ export default function ProductDetailPage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const res = await fetch(`http://localhost:8000/api/products/${id}`);
+        const res = await fetch(`books-shop-backend.vercel.app/api/products/${id}`);
         const data = await res.json();
         setBook(data);
         setCart(JSON.parse(localStorage.getItem("cart")) || []);

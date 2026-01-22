@@ -28,7 +28,9 @@ function CatalogContent() {
     setIsClient(true);
     const fetchProducts = async () => {
       try {
-        const res = await fetch("http://localhost:8000/api/products");
+        const res = await fetch("https://books-shop-backend.vercel.app/api/products");
+
+        // const res = await fetch("books-shop-backend.vercel.app/api/products");
         if (!res.ok) throw new Error("API Failure");
         const data = await res.json();
         setProducts(Array.isArray(data) ? data : []);
