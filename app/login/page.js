@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { LogIn, Mail, Lock, ArrowRight, Sparkles } from "lucide-react";
 import Link from "next/link";
@@ -10,6 +10,52 @@ export default function LoginPage({ onLoginSuccess }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+
+  // --- LOGOUT LOGIC START ---
+  
+  const handleLogout = useCallback(() => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("lastActive");
+    router.push("/login");
+  }, [router]);
+
+  useEffect(() => {
+    // 1. Check if user has been away for more than 5 minutes on load
+    const lastActive = localStorage.getItem("lastActive");
+    if (lastActive) {
+      const fiveMinutes = 5 * 60 * 1000;
+      if (Date.now() - parseInt(lastActive) > fiveMinutes) {
+        handleLogout();
+      }
+    }
+
+    // 2. Inactivity Timer (30 minutes of no mouse/keyboard movement)
+    let inactivityTimer;
+    const resetTimer = () => {
+      clearTimeout(inactivityTimer);
+      // Record current time as "Last Active"
+      localStorage.setItem("lastActive", Date.now().toString());
+      
+      // Set logout for 30 minutes of idleness
+      inactivityTimer = setTimeout(handleLogout, 30 * 60 * 1000);
+    };
+
+    // Listen for user activity
+    window.addEventListener("mousemove", resetTimer);
+    window.addEventListener("keypress", resetTimer);
+    window.addEventListener("scroll", resetTimer);
+
+    resetTimer(); // Initialize
+
+    return () => {
+      window.removeEventListener("mousemove", resetTimer);
+      window.removeEventListener("keypress", resetTimer);
+      window.removeEventListener("scroll", resetTimer);
+      clearTimeout(inactivityTimer);
+    };
+  }, [handleLogout]);
+
+  // --- LOGOUT LOGIC END ---
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -25,8 +71,10 @@ export default function LoginPage({ onLoginSuccess }) {
       const data = await res.json();
       if (res.ok) {
         localStorage.setItem("token", data.token);
+        localStorage.setItem("lastActive", Date.now().toString()); // Set initial activity
+        
         if (onLoginSuccess) onLoginSuccess();
-        else router.push("/welcome"); 
+        else router.push("/"); 
       } else {
         alert(data.message || "Invalid credentials.");
       }
@@ -39,15 +87,11 @@ export default function LoginPage({ onLoginSuccess }) {
   };
 
   return (
-    /* h-screen + overflow-hidden for a fixed, small-footprint feel */
     <div className="h-screen w-full flex items-center justify-center bg-gradient-to-br from-violet-600 via-fuchsia-500 to-indigo-600 p-4 font-sans overflow-hidden">
-      
-      {/* Subtle Background Elements */}
       <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10"></div>
 
       <div className="bg-white/95 backdrop-blur-xl p-8 md:p-10 rounded-[3rem] shadow-2xl w-full max-w-[380px] border border-white/20 relative z-10 animate-in fade-in zoom-in duration-500">
         
-        {/* Compact Header */}
         <div className="text-center mb-8">
           <div className="bg-slate-900 w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-xl shadow-indigo-200">
             <LogIn className="text-violet-400" size={24} strokeWidth={3} />
@@ -113,7 +157,6 @@ export default function LoginPage({ onLoginSuccess }) {
         </div>
       </div>
 
-      {/* Footer Decoration */}
       <div className="absolute bottom-6 flex items-center gap-3 text-white/30 text-[8px] font-black uppercase tracking-[0.4em]">
         <Sparkles size={10} /> Secure Node Terminal <Sparkles size={10} />
       </div>

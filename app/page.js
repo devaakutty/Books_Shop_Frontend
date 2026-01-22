@@ -1,49 +1,66 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import LoginPage from "./login/page";
-// import WelcomePage from "./welcome/page";
 import WelcomePage from "./welcome/page";
 
 export default function Home() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [checkingAuth, setCheckingAuth] = useState(true);
 
-  // SDLC Maintenance Phase: Persisting User Session
-  useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (token) {
-      setIsLoggedIn(true);
-    }
-    setCheckingAuth(false);
+  const handleLogout = useCallback(() => {
+    console.log("Forcing Logout...");
+    localStorage.removeItem("token");
+    localStorage.removeItem("lastActive");
+    localStorage.removeItem("cart");
+    setIsLoggedIn(false);
   }, []);
 
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    const lastActive = localStorage.getItem("lastActive");
+    const now = Date.now();
+    const FIVE_MINUTES = 5 * 60 * 1000;
 
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("cart"); // Clear session data
-    setIsLoggedIn(false);
-  };
+    console.log("Checking Auth. Token:", !!token, "Last Active:", lastActive);
+
+    if (token) {
+      if (!lastActive) {
+        // Token exists but no time recorded? Security risk, log out.
+        handleLogout();
+      } else if (now - parseInt(lastActive) > FIVE_MINUTES) {
+        // Too much time has passed
+        handleLogout();
+      } else {
+        // Session is still fresh
+        setIsLoggedIn(true);
+        localStorage.setItem("lastActive", now.toString());
+      }
+    } else {
+      setIsLoggedIn(false);
+    }
+    
+    setCheckingAuth(false);
+  }, [handleLogout]);
 
   const handleLoginSuccess = (token) => {
-    // In your LoginPage, make sure you pass the token to this function
     if (token) {
       localStorage.setItem("token", token);
+      localStorage.setItem("lastActive", Date.now().toString());
     }
     setIsLoggedIn(true);
   };
 
-  // Prevent UI flickering while checking localStorage
   if (checkingAuth) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50">
-        <div className="w-12 h-12 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
+      <div className="min-h-screen flex items-center justify-center bg-slate-900">
+        <div className="w-12 h-12 border-4 border-violet-500 border-t-transparent rounded-full animate-spin"></div>
       </div>
     );
   }
 
   return (
-    <main className="bg-slate-50 min-h-screen">
+    <main>
       {isLoggedIn ? (
         <WelcomePage onLogout={handleLogout} />
       ) : (
