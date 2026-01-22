@@ -97,7 +97,8 @@ export default function CheckoutPage() {
                 </div>
                 <div className="relative">
                     <Phone className="absolute left-4 top-1/2 -translate-y-1/2 text-violet-400" size={10} />
-                    <input type="tel" placeholder="MOBILE" value={mobile} onChange={(e) => setMobile(e.target.value)} 
+                    <input type="tel" placeholder="MOBILE" value={mobile} onChange={(e) => setMobile(e.target.value)}
+                    maxLength={10} 
                     className="w-full pl-12 p-5 bg-slate-50/50 border-2 border-transparent rounded-2xl font-black text-slate-800 outline-none focus:border-violet-500 focus:bg-white transition-all" />
                 </div>
                 <div className="relative md:col-span-2">
